@@ -8,8 +8,10 @@ import altair as alt
 
 DEFAULT_METRICS = ["Weight", "Reps", "1 Rep Max"]
 
+
 def one_rep_max(weight: pd.Series, reps: pd.Series):
-    return weight / ( 1.0278 - 0.0278 * reps.clip(0, 10) )
+    return weight / (1.0278 - 0.0278 * reps.clip(0, 10))
+
 
 def main():
     csv_file = st.file_uploader("Upload a strong export", type=["csv"])
@@ -29,32 +31,16 @@ def main():
 
     # Select metric to display
     selected_metric = st.selectbox("Select metric", DEFAULT_METRICS)
-    
+
     # Full rows, selected for maximum selected_metric
-    idx = selected_e_df.groupby(["Date", "Exercise Name"])[selected_metric].idxmax()
+    idx = selected_e_df.groupby(["Date", "Exercise Name"])[
+        selected_metric].idxmax()
     df_maxed = selected_e_df.loc[idx].reset_index(drop=True)
 
+    # Use altair to display
     c = alt.Chart(df_maxed).mark_line().encode(
-    x='Date',
-    y=selected_metric,
-    color="Exercise Name")
-
+        x='Date', y=selected_metric, color="Exercise Name")
     st.altair_chart(c, use_container_width=True)
-
-
-
-
-
-
-    # fig, ax = plt.subplots()
-
-    # # Plot one by one
-    # for ex in selected_e_names:
-    #     cat = selected_e_df_maxed.loc[selected_e_df_maxed["Exercise Name"] == ex]
-    #     ax.plot(cat["Date"], cat[selected_metric])
-    # ax.legend(selected_e_names)
-
-    # st.pyplot(fig)
 
 
 
