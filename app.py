@@ -4,8 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import re
 
-DEFAULT_METRICS = ["Weight", "Reps"]
+DEFAULT_METRICS = ["Weight", "Reps", "1 Rep Max"]
 
+def one_rep_max(weight: pd.Series, reps: pd.Series):
+    return weight / ( 1.0278 - 0.0278 * reps.clip(0, 10) )
 
 def main():
     csv_file = st.file_uploader("Upload a strong export", type=["csv"])
@@ -14,40 +16,30 @@ def main():
 
     # Read the table (auto cleans the nan)
     df = pd.read_csv(csv_file, na_filter=False)
-
-    # Parse the data
     df["Date"] = pd.to_datetime(df["Date"])
-    # df["Duration"] = pd.to_timedelta(df["Duration"])
-    df["Volume"] = df["Weight"] * df["Reps"]
+    df["1 Rep Max"] = one_rep_max(df["Weight"], df["Reps"])
 
-    # Get the unique exercises -> selected_exercise_df
-    all_exercise_names = df["Exercise Name"].unique()
-    selected_exercise_names = st.multiselect(
-        "Select exercises", all_exercise_names)
-    selected_exercise_patern = '|'.join(
-        map(re.escape, selected_exercise_names))     # ex_name_1|ex_name_2
-    selected_exercise_df = df[df["Exercise Name"].str.fullmatch(
-        selected_exercise_patern)]
+    # Select exercises
+    all_e_names = df["Exercise Name"].unique()
+    selected_e_names = st.multiselect("Select exercises", all_e_names)
+    pattern = '|'.join(map(re.escape, selected_e_names))
+    selected_e_df = df[df["Exercise Name"].str.fullmatch(pattern)]
 
-    # Display the table
-    num_to_display = st.slider("How many rows to display", 0, 500)
-    # st.dataframe(selected_exercise_df.head(num_to_display))
-
-    # Choose metric to display
+    # Select metric to display
     selected_metric = st.selectbox("Select metric", DEFAULT_METRICS)
-    selected_exercise_df = selected_exercise_df[[
-        "Date", "Exercise Name", selected_metric]]
-    # selected_exercise_df.head(num_to_display)
-    selected_exercise_pivot = selected_exercise_df.pivot(
-        columns=["Exercise Name"], values=["Date", selected_metric])
-    # if selected_exercise_pivot.size > 0:
-    st.dataframe(selected_exercise_pivot.head(num_to_display))
-    print(selected_exercise_pivot)
-    # selected_exercise_pivot
+    
+    # Full rows, selected for maximum selected_metric
+    idx = selected_e_df.groupby(["Date", "Exercise Name"])[selected_metric].idxmax()
+    selected_e_df_maxed = selected_e_df.loc[idx].reset_index(drop=True)
 
     fig, ax = plt.subplots()
-    selected_exercise_pivot.plot(ax=ax)
-    
+
+    # Plot one by one
+    for ex in selected_e_names:
+        cat = selected_e_df_maxed.loc[selected_e_df_maxed["Exercise Name"] == ex]
+        ax.plot(cat["Date"], cat[selected_metric])
+    ax.legend(selected_e_names)
+
     st.pyplot(fig)
 
 
