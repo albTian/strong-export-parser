@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import re
+import altair as alt
+
 
 DEFAULT_METRICS = ["Weight", "Reps", "1 Rep Max"]
 
@@ -30,17 +32,29 @@ def main():
     
     # Full rows, selected for maximum selected_metric
     idx = selected_e_df.groupby(["Date", "Exercise Name"])[selected_metric].idxmax()
-    selected_e_df_maxed = selected_e_df.loc[idx].reset_index(drop=True)
+    df_maxed = selected_e_df.loc[idx].reset_index(drop=True)
 
-    fig, ax = plt.subplots()
+    c = alt.Chart(df_maxed).mark_line().encode(
+    x='Date',
+    y=selected_metric,
+    color="Exercise Name")
 
-    # Plot one by one
-    for ex in selected_e_names:
-        cat = selected_e_df_maxed.loc[selected_e_df_maxed["Exercise Name"] == ex]
-        ax.plot(cat["Date"], cat[selected_metric])
-    ax.legend(selected_e_names)
+    st.altair_chart(c, use_container_width=True)
 
-    st.pyplot(fig)
+
+
+
+
+
+    # fig, ax = plt.subplots()
+
+    # # Plot one by one
+    # for ex in selected_e_names:
+    #     cat = selected_e_df_maxed.loc[selected_e_df_maxed["Exercise Name"] == ex]
+    #     ax.plot(cat["Date"], cat[selected_metric])
+    # ax.legend(selected_e_names)
+
+    # st.pyplot(fig)
 
 
 
