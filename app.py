@@ -39,9 +39,11 @@ def main():
         "Date", "Exercise Name", selected_metric]]
     # selected_exercise_df.head(num_to_display)
     selected_exercise_pivot = selected_exercise_df.pivot(
-        columns=["Exercise Name"], values=["Date", selected_metric]).fillna(0)
+        columns=["Exercise Name"], values=["Date", selected_metric])
     # if selected_exercise_pivot.size > 0:
     st.dataframe(selected_exercise_pivot.head(num_to_display))
+    print(selected_exercise_pivot)
+    # selected_exercise_pivot
 
     fig, ax = plt.subplots()
     selected_exercise_pivot.plot(ax=ax)
